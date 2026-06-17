@@ -2,5 +2,3 @@ streamlit
 opencv-python-headless
 streamlit-webrtc
 av
-numpy
-face-recognition
