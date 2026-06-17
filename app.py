@@ -3,9 +3,8 @@ import cv2
 import av
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
-class JasFastVision(VideoTransformerBase):
+class ProfessionalGate(VideoTransformerBase):
     def __init__(self):
-        # ये बहुत हल्का मॉडल है जो बिना एरर दिए चलेगा
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
@@ -14,10 +13,12 @@ class JasFastVision(VideoTransformerBase):
         faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
         
         for (x, y, w, h) in faces:
+            # बॉक्स का रंग हरा, ताकि क्लाइंट को 'Security' महसूस हो
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            cv2.putText(img, "REENA: JAS ACTIVE", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+            # प्रोफेशनल टैग
+            cv2.putText(img, "SECURE GATE: AUTHORIZED", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
             
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-st.title("🛡️ OmniProtect: Lite Mode")
-webrtc_streamer(key="jas-light", video_transformer_factory=JasFastVision)
+st.title("🛡️ OmniProtect: Pro Gateway")
+webrtc_streamer(key="pro-gate", video_transformer_factory=ProfessionalGate)
