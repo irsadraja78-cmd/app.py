@@ -4,34 +4,33 @@ import av
 import time
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
+# सेशन स्टेट का सेटअप (डेटा को याद रखने के लिए)
 if 'access_logs' not in st.session_state:
     st.session_state.access_logs = []
 
-class FinalGate(VideoTransformerBase):
+class FinalSecurityGate(VideoTransformerBase):
     def __init__(self):
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         img = frame.to_ndarray(format="bgr24")
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = self.face_cascade.detectMultiScale(gray, 1.1, 5)
+        faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
         
         for (x, y, w, h) in faces:
+            # बॉक्स और नाम
             cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            cv2.putText(img, "REENA DETECTED", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            cv2.putText(img, "REENA: ACCESS", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
             
-            # सिर्फ तभी लॉग करें जब 2 सेकंड का गैप हो (ताकि लिस्ट न भरे)
-            if not st.session_state.access_logs or (time.time() - st.session_state.last_log_time > 2):
-                st.session_state.access_logs.append(f"REENA Detected: {time.strftime('%H:%M:%S')}")
-                st.session_state.last_log_time = time.time()
+            # लॉग अपडेट लॉजिक - इसे यहाँ एक फंक्शन की तरह जोड़ दिया है
+            log_entry = f"ENTRY: {time.strftime('%H:%M:%S')}"
+            if log_entry not in st.session_state.access_logs:
+                st.session_state.access_logs.append(log_entry)
             
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-if 'last_log_time' not in st.session_state:
-    st.session_state.last_log_time = 0
+st.title("🛡️ OmniProtect: Final Build")
+webrtc_streamer(key="final-build", video_transformer_factory=FinalSecurityGate)
 
-st.title("🛡️ OmniProtect: ACTIVE")
-webrtc_streamer(key="final-gate", video_transformer_factory=FinalGate)
-
-st.subheader("Access History")
+st.subheader("Access History Logs")
 st.write(st.session_state.access_logs)
