@@ -1,36 +1,44 @@
-import streamlit as st
-import cv2
-import av
 import time
-from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
-# सेशन स्टेट का सेटअप (डेटा को याद रखने के लिए)
-if 'access_logs' not in st.session_state:
-    st.session_state.access_logs = []
-
-class FinalSecurityGate(VideoTransformerBase):
+class NormalSecurityApp:
     def __init__(self):
-        self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        # शुरुआत में हम मान लेते हैं कि कोई पिन सेट नहीं है
+        self.saved_pin = "1234"  # यह आपका डिफॉल्ट पिन है
+        self.max_attempts = 3    # अधिकतम 3 मौके मिलेंगे
 
-    def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
-        img = frame.to_ndarray(format="bgr24")
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        faces = self.face_cascade.detectMultiScale(gray, 1.1, 4)
+    def login(self):
+        print("--- आपका स्वागत है सुरक्षित ऐप में ---")
+        attempts = 0
+
+        while attempts < self.max_attempts:
+            # यूजर से पिन मांगना
+            entered_pin = input("कृपया अपना 4-अंकों का PIN दर्ज करें: ")
+
+            # पिन की जांच करना
+            if entered_pin == self.saved_pin:
+                print("\n✅ एक्सेस ग्रांटेड! आप ऐप के अंदर आ चुके हैं।")
+                self.open_app_dashboard()
+                return True
+            else:
+                attempts += 1
+                remaining = self.max_attempts - attempts
+                print(f"❌ गलत PIN! आपके पास {remaining} मौके और बचे हैं।\n")
         
-        for (x, y, w, h) in faces:
-            # बॉक्स और नाम
-            cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-            cv2.putText(img, "REENA: ACCESS", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-            
-            # लॉग अपडेट लॉजिक - इसे यहाँ एक फंक्शन की तरह जोड़ दिया है
-            log_entry = f"ENTRY: {time.strftime('%H:%M:%S')}"
-            if log_entry not in st.session_state.access_logs:
-                st.session_state.access_logs.append(log_entry)
-            
-        return av.VideoFrame.from_ndarray(img, format="bgr24")
+        # 3 बार गलत पिन डालने पर सुरक्षा ब्लॉक
+        print("🚨 सुरक्षा अलर्ट: 3 बार गलत पिन डाला गया! ऐप को 10 सेकंड के लिए ब्लॉक किया जा रहा है।")
+        time.sleep(10) # ऐप को 10 सेकंड के लिए रोक देगा
+        print("आप अब फिर से कोशिश कर सकते हैं।")
+        return False
 
-st.title("🛡️ OmniProtect: Final Build")
-webrtc_streamer(key="final-build", video_transformer_factory=FinalSecurityGate)
+    def open_app_dashboard(self):
+        # लॉग इन होने के बाद दिखने वाली स्क्रीन
+        print("---------------------------------------")
+        print("📱 मुख्य डैशबोर्ड: आपकी फाइलें यहाँ सुरक्षित हैं।")
+        print("1. सुरक्षित फाइलें देखें")
+        print("2. पिन बदलें")
+        print("3. लॉग आउट करें")
+        print("---------------------------------------")
 
-st.subheader("Access History Logs")
-st.write(st.session_state.access_logs)
+# ऐप को शुरू करना
+app = NormalSecurityApp()
+app.login()
